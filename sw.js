@@ -1,8 +1,8 @@
 // Car Bond service worker: keeps the app shell available so it opens fast and installs as an app.
-const CACHE = "car-bond-v1";
+const CACHE = "car-bond-v3";
 const SHELL = [
   "./", "./index.html", "./app.js", "./config.js", "./manifest.webmanifest",
-  "./icon-192.png", "./icon-512.png", "./maskable-512.png", "./apple-touch-icon.png",
+  "./icon-192.png", "./icon-512.png", "./maskable-512.png", "./apple-touch-icon.png", "./logo.jpg",
 ];
 
 self.addEventListener("install", (e) => {
