@@ -4,9 +4,9 @@
 
   // ---------- setup ----------
   const CFG = window.CAR_BOND_CONFIG || {};
-  const sb = CFG.SUPABASE_URL && window.supabase ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : null;
+  const sb = CFG.SUPABASE_URL && window.supabase ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true } }) : null;
   const BUCKET = "car-photos";
-  const SELECT = "*, profiles(name, verified, dealer_name)";
+  const SELECT = "*, profiles(name, verified, dealer_name, avatar_url)";
   const PAGE = 20;
   const MAX_PHOTOS = 10;
 
@@ -24,6 +24,11 @@
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
     mute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="m17 9 4 6M21 9l-4 6"/></svg>',
     sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+    google: '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5 21 12 3 3.5l1.5 7L15 12 4.5 13.5z"/></svg>',
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
     photos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>',
   };
@@ -72,6 +77,7 @@
     const t = document.createElement("div"); t.className = "toast"; t.textContent = m;
     document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
   }
+  const avatar = (name, url, cls) => url ? `<img class="avatar ${cls || ""}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<div class="avatar ${cls || ""}">${esc(initial(name))}</div>`;
   const sellerName = (c) => (c.profiles && c.profiles.dealer_name) || (c.profiles && c.profiles.name) || c.seller_name || "Private seller";
   const isVerified = (c) => !!(c.profiles && c.profiles.verified);
 
@@ -304,28 +310,45 @@
   }
 
   // ---------- account ----------
+  const pwField = (id, label, hint, ac) => `<label class="fl" for="${id}">${label}${hint ? ` <small>${hint}</small>` : ""}
+      <span class="pw"><input class="inp" id="${id}" type="password" autocomplete="${ac}" placeholder="••••••">
+      <button type="button" class="eye" data-eye="${id}" aria-label="Show password">${I.eye}</button></span></label>`;
   function authForm(context) {
     const up = authMode === "up";
     return `<div class="card">
       <div class="seg"><button data-auth="in" aria-pressed="${!up}">Sign in</button><button data-auth="up" aria-pressed="${up}">Create account</button></div>
       ${context ? `<p style="margin:0;color:var(--muted)">${context}</p>` : ""}
+      <button type="button" class="btn google wide" data-google>${I.google}Continue with Google</button>
+      <div class="or"><span>or use your phone number</span></div>
       <form id="authForm" class="fsec" novalidate>
         ${up ? '<label class="fl" for="a-name">Your name or business name<input class="inp" id="a-name" autocomplete="name" placeholder="e.g. Peter"></label>' : ""}
         <label class="fl" for="a-phone">Phone number<input class="inp num" id="a-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0772 123 456"></label>
-        <label class="fl" for="a-pin">${up ? "Create a PIN <small>at least 6 numbers, remember it</small>" : "Your PIN"}<input class="inp num" id="a-pin" type="password" inputmode="numeric" autocomplete="${up ? "new-password" : "current-password"}" placeholder="••••••"></label>
+        ${up ? pwField("a-pin", "Create a password", "at least 6 characters", "new-password") + pwField("a-pin2", "Confirm password", "type it again", "new-password")
+             : pwField("a-pin", "Password", "", "current-password")}
         <p class="err" id="aerr" role="alert"></p>
         <button class="btn red wide" type="submit" id="authBtn">${up ? "Create my account" : "Sign in"}</button>
       </form></div>`;
+  }
+  async function googleSignIn(btn) {
+    btn.disabled = true; btn.lastChild.textContent = "Opening Google…";
+    const back = location.href.split("#")[0].split("?")[0];
+    const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: back } });
+    if (error) {
+      btn.disabled = false; btn.lastChild.textContent = "Continue with Google";
+      const e = $("#aerr");
+      if (e) e.textContent = /not enabled|unsupported provider/i.test(error.message || "") ? "Google sign-in isn’t switched on yet. Use your phone number for now." : "Couldn’t open Google. Check your internet and try again.";
+    }
   }
   async function doAuth(e) {
     e.preventDefault();
     const up = authMode === "up";
     const name = up ? $("#a-name").value.trim() : "";
-    const phone = $("#a-phone").value.trim(), pin = $("#a-pin").value;
+    const phone = $("#a-phone").value.trim(), pin = $("#a-pin").value, pin2 = up ? $("#a-pin2").value : pin;
     const err = $("#aerr"), btn = $("#authBtn");
     if (up && !name) { err.textContent = "Enter your name."; return; }
     if (waNumber(phone).length < 12) { err.textContent = "Enter a full phone number, like 0772 123 456."; return; }
-    if (pin.length < 6) { err.textContent = "Your PIN must be at least 6 numbers."; return; }
+    if (pin.length < 6) { err.textContent = "Your password must be at least 6 characters."; return; }
+    if (pin !== pin2) { err.textContent = "The two passwords don’t match. Type them again."; $("#a-pin2").focus(); return; }
     btn.disabled = true; btn.textContent = up ? "Creating account…" : "Signing in…"; err.textContent = "";
     try {
       if (up) {
@@ -341,7 +364,7 @@
       const m = String((x && x.message) || "");
       err.textContent = m === "confirm" ? "Account created, but sign-in is waiting for setup. Ask the Car Bond owner to turn off “Confirm email” in Supabase."
         : /already registered|already exists/i.test(m) ? "This number already has an account. Tap Sign in instead."
-        : /invalid login|invalid credentials/i.test(m) ? "Wrong phone number or PIN. Try again."
+        : /invalid login|invalid credentials/i.test(m) ? "Wrong phone number or password. Try again."
         : /network|fetch/i.test(m) ? "No internet connection. Try again."
         : "Something went wrong. Try again.";
       btn.disabled = false; btn.textContent = up ? "Create my account" : "Sign in";
@@ -356,16 +379,20 @@
     }
     const p = profile || {};
     $("#main").innerHTML = `<div class="screen">
-      <div class="card" style="margin-top:1rem"><div class="prof"><div class="avatar big">${esc(initial(p.dealer_name || p.name))}</div>
+      <div class="card" style="margin-top:1rem"><div class="prof">${avatar(p.dealer_name || p.name, p.avatar_url, "big")}
         <div><h2>${esc(p.dealer_name || p.name || "Your account")}</h2>
         <p class="num">${esc(p.phone || "")}${p.location ? " · " + esc(p.location) : ""}</p>
         ${p.verified ? `<span class="verified">${I.check}Verified dealer</span>` : ""}</div></div>
+        ${waNumber(p.phone).length < 12 ? '<p class="note">Add your phone number so buyers can call or WhatsApp you. Tap Edit profile.</p>' : ""}
         <div class="pair"><button class="btn ghost sm" data-editprof>Edit profile</button><button class="btn ghost sm" data-go="#seller-${esc(me.id)}">My public page</button></div>
+        <div class="pair"><button class="btn ghost sm" data-go="#saved">${I.heart}Saved cars</button><button class="btn ghost sm" data-go="#chats">${I.chat}My chats</button></div>
       </div>
+      <div id="following"></div>
       <div class="sec"><h2>My cars</h2><button class="link" data-go="#sell">+ Sell a car</button></div>
       <div id="mine" class="list">${skeletons(1)}</div>
       <button class="btn ghost wide" data-signout style="margin-top:1.6rem">Sign out</button>
     </div>`;
+    loadFollowing(id);
     try {
       const data = await q((s) => s.from("cars").select(SELECT).eq("owner", me.id).order("created_at", { ascending: false }));
       if (id !== renderId) return;
@@ -381,28 +408,53 @@
     } catch (e) { if (id === renderId) $("#mine").innerHTML = offline("account"); }
   }
 
+  let newAvatar = null;
   function editProfile() {
     const p = profile || {};
+    newAvatar = null;
     openOverlay(`<div class="phead"><div class="in"><button class="iconbtn" data-close aria-label="Back">${I.back}</button><h2>Edit profile</h2></div></div>
       <form class="pbody" id="profForm" novalidate>
+        <div class="avedit"><span id="avPrev">${avatar(p.dealer_name || p.name, p.avatar_url, "big")}</span>
+          <label class="btn ghost sm" for="p-photo">${I.camera}${p.avatar_url ? "Change photo" : "Add profile photo"}</label>
+          <input id="p-photo" type="file" accept="image/*" hidden></div>
         <label class="fl" for="p-name">Name<input class="inp" id="p-name" value="${esc(p.name)}" autocomplete="name"></label>
-        <label class="fl" for="p-phone">Phone or WhatsApp number <small>buyers see this</small><input class="inp num" id="p-phone" type="tel" inputmode="tel" value="${esc(p.phone)}"></label>
+        <label class="fl" for="p-phone">Phone or WhatsApp number <small>buyers see this</small><input class="inp num" id="p-phone" type="tel" inputmode="tel" value="${esc(p.phone)}" placeholder="0772 123 456"></label>
         <label class="fl" for="p-loc">Area <small>optional</small><input class="inp" id="p-loc" value="${esc(p.location)}" placeholder="e.g. Ntinda, Kampala"></label>
         ${p.dealer_name ? `<p class="note">Your dealer name “${esc(p.dealer_name)}” is set by Car Bond.</p>` : ""}
         <p class="err" id="perr"></p>
-        <button class="btn red wide" type="submit">Save</button>
+        <button class="btn red wide" type="submit" id="profBtn">Save</button>
       </form>`, false);
+  }
+  async function squarePhoto(file) {
+    const bmp = await createImageBitmap(file);
+    const side = Math.min(bmp.width, bmp.height), out = Math.min(512, side);
+    const cv = document.createElement("canvas"); cv.width = cv.height = out;
+    cv.getContext("2d").drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, out, out);
+    return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error("bad"))), "image/jpeg", 0.85));
+  }
+  async function pickAvatar(file) {
+    try { newAvatar = await squarePhoto(file); $("#avPrev").innerHTML = `<img class="avatar big" src="${URL.createObjectURL(newAvatar)}" alt="">`; $("#perr").textContent = ""; }
+    catch (e) { newAvatar = null; $("#perr").textContent = "That photo couldn’t be opened. Choose a JPG or PNG photo."; }
   }
   async function saveProfile(e) {
     e.preventDefault();
     const name = $("#p-name").value.trim(), phone = $("#p-phone").value.trim(), location = $("#p-loc").value.trim();
     if (!name) { $("#perr").textContent = "Enter your name."; return; }
-    if (waNumber(phone).length < 12) { $("#perr").textContent = "Enter a full phone number."; return; }
+    if (waNumber(phone).length < 12) { $("#perr").textContent = "Enter a full phone number, like 0772 123 456."; return; }
+    const btn = $("#profBtn"); btn.disabled = true; btn.textContent = "Saving…";
     try {
-      await q((s) => s.from("profiles").update({ name, phone, location }).eq("id", me.id));
+      const upd = { name, phone, location };
+      if (newAvatar) {
+        const path = `${me.id}/${Date.now().toString(36)}.jpg`;
+        const { error } = await sb.storage.from("avatars").upload(path, newAvatar, { contentType: "image/jpeg" });
+        if (error) throw error;
+        upd.avatar_url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      }
+      await q((s) => s.from("profiles").update(upd).eq("id", me.id));
       await q((s) => s.from("cars").update({ seller_name: name, seller_phone: phone }).eq("owner", me.id));
       await loadProfile(); toast("Profile saved"); closeOverlay();
-    } catch (x) { $("#perr").textContent = "Couldn’t save. Check your internet and try again."; }
+      if (tab === "account") { renderId++; accountScreen(renderId); }
+    } catch (x) { $("#perr").textContent = "Couldn’t save. Check your internet and try again."; btn.disabled = false; btn.textContent = "Save"; }
   }
 
   // ---------- sell wizard ----------
@@ -563,7 +615,7 @@
     o.querySelector(".overlay").scrollTop = 0;
   }
   let pushed = 0;
-  const isOverlayHash = (h) => /^#(car-|seller-|filters$)/.test(h);
+  const isOverlayHash = (h) => /^#(car-|seller-|chat-|filters$)/.test(h);
   function closeOverlay() {
     if (isOverlayHash(location.hash)) {
       if (pushed > 0) { pushed--; history.back(); } else location.replace("#" + tab);
@@ -589,7 +641,7 @@
     const msg = encodeURIComponent(`Hello ${sellerName(c)}, I saw your ${c.year} ${c.make} ${c.model} (UGX ${ugx(c.price)}) on Car Bond. Is it still available?`);
     const bar = mine ? `<div class="in"><button class="btn ghost" data-edit="${esc(c.id)}">Edit</button><button class="btn black" data-sold="${esc(c.id)}">${c.status === "sold" ? "Sell again" : "Mark as sold"}</button></div>`
       : c.status === "sold" ? `<div class="in one"><button class="btn ghost" data-go="#search">This car is sold. Find others</button></div>`
-      : `<div class="in"><a class="btn wa" href="https://wa.me/${num}?text=${msg}" target="_blank" rel="noopener">${I.wa}WhatsApp</a><a class="btn red" href="tel:+${num}">${I.phone}Call</a></div>`;
+      : `<div class="in three"><button class="btn black" data-message="${esc(c.owner)}" data-car="${esc(c.id)}">${I.chat}Chat</button><a class="btn wa" href="https://wa.me/${num}?text=${msg}" target="_blank" rel="noopener">${I.wa}WhatsApp</a><a class="btn red" href="tel:+${num}">${I.phone}Call</a></div>`;
     openOverlay(`${head(esc(c.make + " " + c.model))}
       <div class="gal"><div class="track" id="track">${pics}</div>${(c.photos || []).length > 1 ? `<span class="ctr" id="ctr">1 / ${c.photos.length}</span>` : ""}</div>
       <div class="pbody">
@@ -599,7 +651,7 @@
           <div class="price num"><small>UGX</small>${ugx(c.price)}</div>
           <div class="mt num"><span>${ugx(c.mileage)} km</span><span>${esc(c.location)}</span></div>
         </div>
-        <div class="seller"><div class="avatar">${esc(initial(sellerName(c)))}</div>
+        <div class="seller">${avatar(sellerName(c), c.profiles && c.profiles.avatar_url)}
           <div><div class="sn">${esc(sellerName(c))}</div><div class="sd">${isVerified(c) ? `<span class="verified">${I.check}Verified dealer</span>` : "Private seller"}</div></div>
           <button class="btn ghost sm" data-go="#seller-${esc(c.owner)}">See all cars from this seller</button></div>
         <div class="phoneline"><code>${esc(c.seller_phone)}</code><button class="btn ghost sm" data-copy="${esc(c.seller_phone)}">Copy</button></div>
@@ -618,9 +670,11 @@
     const head = (t) => `<div class="phead"><div class="in"><button class="iconbtn" data-close aria-label="Back">${I.back}</button><h2>${t}</h2></div></div>`;
     openOverlay(head("Seller") + `<div class="pbody">${skeletons(1)}</div>`);
     try {
-      const [p, list] = await Promise.all([
+      const [p, list, fc, mine] = await Promise.all([
         q((s) => s.from("profiles").select("*").eq("id", uid).maybeSingle()),
         q((s) => s.from("cars").select(SELECT).eq("owner", uid).order("status").order("created_at", { ascending: false })),
+        sb.from("follows").select("follower", { count: "exact", head: true }).eq("followee", uid).then((r) => r.count || 0, () => 0),
+        me && me.id !== uid ? sb.from("follows").select("follower").eq("follower", me.id).eq("followee", uid).maybeSingle().then((r) => !!r.data, () => false) : Promise.resolve(false),
       ]);
       if (!/^#seller-/.test(location.hash)) return;
       remember(list);
@@ -628,12 +682,158 @@
       const num = waNumber(p && p.phone);
       const live = list.filter((c) => c.status !== "sold").length;
       openOverlay(head(esc(name)) + `<div class="pbody">
-        <div class="card"><div class="prof"><div class="avatar big">${esc(initial(name))}</div>
+        <div class="card"><div class="prof">${avatar(name, p && p.avatar_url, "big")}
           <div><h2>${esc(name)}</h2>${p && p.verified ? `<span class="verified">${I.check}Verified dealer</span>` : "<p>Private seller</p>"}
-          <p class="num">${live} car${live === 1 ? "" : "s"} for sale${p && p.location ? " · " + esc(p.location) : ""}</p></div></div></div>
+          <p class="num">${live} car${live === 1 ? "" : "s"} for sale${p && p.location ? " · " + esc(p.location) : ""}</p></div></div>
+          <div class="stats num"><div><b id="fcount">${fc}</b><span>Follower${fc === 1 ? "" : "s"}</span></div><div><b>${list.length}</b><span>Car${list.length === 1 ? "" : "s"} posted</span></div></div>
+          ${me && me.id === uid ? "" : `<div class="pair"><button class="btn ${mine ? "ghost" : "red"} sm" data-follow="${esc(uid)}" data-on="${mine ? 1 : 0}">${mine ? "Following ✓" : "+ Follow"}</button><button class="btn black sm" data-message="${esc(uid)}">${I.chat}Message</button></div>`}</div>
         <div class="list">${list.length ? list.map(carCard).join("") : emptyBox("No cars right now", "", "")}</div></div>`,
         num.length >= 12 && !(me && me.id === uid) ? `<div class="in"><a class="btn wa" href="https://wa.me/${num}" target="_blank" rel="noopener">${I.wa}WhatsApp</a><a class="btn red" href="tel:+${num}">${I.phone}Call</a></div>` : "");
     } catch (e) { openOverlay(head("Seller") + `<div class="pbody">${offline("seller")}</div>`); }
+  }
+
+  // ---------- following ----------
+  async function loadFollowing(id) {
+    try {
+      const rows = await q((s) => s.from("follows").select("followee, profiles!follows_followee_fkey(id, name, dealer_name, avatar_url, verified)").eq("follower", me.id).order("created_at", { ascending: false }));
+      if (id !== renderId || !rows.length) return;
+      const el = $("#following"); if (!el) return;
+      el.innerHTML = `<div class="sec"><h2>Following</h2></div><div class="hscroll people">${rows.map((r) => { const p = r.profiles || {}; const n = p.dealer_name || p.name || "Seller";
+        return `<button class="person" data-go="#seller-${esc(r.followee)}">${avatar(n, p.avatar_url)}<span>${esc(n)}</span></button>`; }).join("")}</div>`;
+    } catch (e) {}
+  }
+  async function toggleFollow(btn) {
+    if (!me) { toast("Sign in to follow sellers"); return nav("#account"); }
+    const uid = btn.dataset.follow, on = btn.dataset.on === "1";
+    btn.disabled = true;
+    try {
+      if (on) await q((s) => s.from("follows").delete().eq("follower", me.id).eq("followee", uid));
+      else await q((s) => s.from("follows").insert({ follower: me.id, followee: uid }));
+      btn.dataset.on = on ? "0" : "1"; btn.className = `btn ${on ? "red" : "ghost"} sm`; btn.textContent = on ? "+ Follow" : "Following ✓";
+      const fc = $("#fcount"); if (fc) fc.textContent = Math.max(0, Number(fc.textContent) + (on ? -1 : 1));
+      toast(on ? "Unfollowed" : "Following. You’ll see them in your Account");
+    } catch (e) { toast("Couldn’t update. Try again."); }
+    btn.disabled = false;
+  }
+
+  // ---------- live chat ----------
+  let unread = 0, inbox = null, thread = null, chatCar = null;
+  const people = new Map();
+  function setBadge() {
+    const b = $("#chatBadge"); if (!b) return;
+    b.hidden = !unread; b.textContent = unread > 9 ? "9+" : String(unread);
+  }
+  async function countUnread() {
+    if (!me) { unread = 0; return setBadge(); }
+    const r = await sb.from("messages").select("id", { count: "exact", head: true }).eq("receiver", me.id).is("read_at", null);
+    unread = r.count || 0; setBadge();
+  }
+  async function getPeople(ids) {
+    const need = ids.filter((i) => !people.has(i));
+    if (need.length) { const rows = await q((s) => s.from("profiles").select("id, name, dealer_name, avatar_url, verified").in("id", need)); rows.forEach((p) => people.set(p.id, p)); }
+    return ids.map((i) => people.get(i) || { id: i, name: "Car Bond user" });
+  }
+  const pname = (p) => (p && (p.dealer_name || p.name)) || "Car Bond user";
+  function when(t) {
+    const d = new Date(t), now = new Date();
+    if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (d.toDateString() === y.toDateString()) return "Yesterday";
+    return d.toLocaleDateString([], { day: "numeric", month: "short" });
+  }
+  function startInbox() {
+    stopInbox(); if (!me) return;
+    inbox = sb.channel("inbox-" + me.id)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `receiver=eq.${me.id}` }, (pl) => onIncoming(pl.new))
+      .subscribe();
+    countUnread().catch(() => {});
+  }
+  function stopInbox() { if (inbox) { sb.removeChannel(inbox); inbox = null; } }
+  async function onIncoming(m) {
+    if (thread && thread.other === m.sender) {
+      if (!thread.msgs.some((x) => x.id === m.id)) { thread.msgs.push(m); drawThread(true); }
+      sb.from("messages").update({ read_at: new Date().toISOString() }).eq("id", m.id).then(() => {}, () => {});
+      return;
+    }
+    unread++; setBadge();
+    const [p] = await getPeople([m.sender]).catch(() => [{}]);
+    toast(`New message from ${pname(p)}`);
+    if (tab === "chats" && !overlayDepth) { renderId++; chatsScreen(renderId); }
+  }
+
+  async function chatsScreen(id) {
+    if (!me) {
+      $("#main").innerHTML = `<div class="screen"><div class="sec"><h2>Chats</h2></div>${authForm("Sign in to chat with sellers and buyers inside Car Bond.")}</div>`;
+      return;
+    }
+    $("#main").innerHTML = `<div class="screen"><div class="sec"><h2>Chats</h2></div><div id="convos" class="convos">${skeletons(1)}</div></div>`;
+    try {
+      const rows = await q((s) => s.from("messages").select("*").or(`sender.eq.${me.id},receiver.eq.${me.id}`).order("created_at", { ascending: false }).limit(400));
+      const conv = new Map();
+      rows.forEach((m) => {
+        const other = m.sender === me.id ? m.receiver : m.sender;
+        if (!conv.has(other)) conv.set(other, { other, last: m, unread: 0 });
+        if (m.receiver === me.id && !m.read_at) conv.get(other).unread++;
+      });
+      const list = [...conv.values()];
+      const ps = await getPeople(list.map((c) => c.other));
+      if (id !== renderId) return;
+      $("#convos").innerHTML = list.length ? list.map((c, i) => `<button class="convo" data-go="#chat-${esc(c.other)}">
+          ${avatar(pname(ps[i]), ps[i].avatar_url)}
+          <div class="cv"><div class="cvt"><b>${esc(pname(ps[i]))}</b><small>${esc(when(c.last.created_at))}</small></div>
+          <div class="cvm"><span>${c.last.sender === me.id ? "You: " : ""}${esc(c.last.body)}</span>${c.unread ? `<i>${c.unread}</i>` : ""}</div></div></button>`).join("")
+        : emptyBox("No chats yet", "Open any car and tap Chat to message the seller.", '<button class="btn black" data-go="#search">Find a car</button>');
+    } catch (e) { if (id === renderId) $("#convos").innerHTML = offline("chats"); }
+  }
+
+  function closeThread() { thread = null; }
+  async function chatPage(other) {
+    if (!me) { toast("Sign in to chat"); location.replace("#account"); return; }
+    if (other === me.id) { location.replace("#account"); return; }
+    const car = chatCar && cache.get(chatCar); chatCar = null;
+    thread = { other, msgs: [], car: car || null };
+    const shell = (p) => `<div class="phead"><div class="in"><button class="iconbtn" data-close aria-label="Back">${I.back}</button>
+        <button class="chathead" data-go="#seller-${esc(other)}">${avatar(pname(p), p && p.avatar_url)}<span><b>${esc(pname(p))}</b>${p && p.verified ? `<small class="verified">${I.check}Verified dealer</small>` : "<small>Tap to see their cars</small>"}</span></button></div></div>
+      <div class="pbody"><p class="note" style="font-size:.85rem">Stay safe: never send money before seeing the car and the logbook.</p><div id="msgs" class="msgs">${skeletons(1)}</div></div>`;
+    const composer = `<form class="in composer" id="chatForm"><textarea id="chatText" rows="1" maxlength="2000" placeholder="Type a message…" aria-label="Message">${car ? esc(`Hello, is your ${car.year} ${car.make} ${car.model} (UGX ${ugx(car.price)}) still available?`) : ""}</textarea>
+      <button class="sendbtn" type="submit" aria-label="Send">${I.send}</button></form>`;
+    let [p] = await getPeople([other]).catch(() => [null]);
+    if (!thread || thread.other !== other) return;
+    openOverlay(shell(p), composer);
+    try {
+      const rows = await q((s) => s.from("messages").select("*").or(`and(sender.eq.${me.id},receiver.eq.${other}),and(sender.eq.${other},receiver.eq.${me.id})`).order("created_at", { ascending: true }).limit(300));
+      if (!thread || thread.other !== other) return;
+      thread.msgs = rows; drawThread(true);
+      const unreadIds = rows.filter((m) => m.receiver === me.id && !m.read_at).map((m) => m.id);
+      if (unreadIds.length) { await sb.from("messages").update({ read_at: new Date().toISOString() }).in("id", unreadIds); unread = Math.max(0, unread - unreadIds.length); setBadge(); }
+    } catch (e) { const el = $("#msgs"); if (el) el.innerHTML = offline("chat"); }
+  }
+  function drawThread(scroll) {
+    const el = $("#msgs"); if (!el || !thread) return;
+    if (!thread.msgs.length) { el.innerHTML = `<p class="hint">Say hello. Your messages go straight to ${thread.car ? "the seller" : "them"}.</p>`; return; }
+    let lastDay = "";
+    el.innerHTML = thread.msgs.map((m) => {
+      const day = new Date(m.created_at).toDateString();
+      const sep = day !== lastDay ? `<div class="day">${esc(when(m.created_at).match(/:/) ? "Today" : when(m.created_at))}</div>` : ""; lastDay = day;
+      const c = m.car_id && cache.get(m.car_id);
+      return `${sep}<div class="bub ${m.sender === me.id ? "me" : "them"}">${m.car_id ? `<button class="carref" data-go="#car-${esc(m.car_id)}">${I.car}<span>${c ? esc(`${c.year} ${c.make} ${c.model}`) : "View car"}</span></button>` : ""}<p>${esc(m.body)}</p><small>${esc(new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}${m.pending ? " · sending" : ""}</small></div>`;
+    }).join("");
+    if (scroll) { const o = $(".overlay"); if (o) o.scrollTop = o.scrollHeight; }
+  }
+  async function sendChat(e) {
+    e.preventDefault();
+    const ta = $("#chatText"); const body = ta.value.trim(); if (!body || !thread) return;
+    const carId = thread.car && !thread.msgs.length ? thread.car.id : null;
+    const temp = { id: "tmp" + Date.now(), sender: me.id, receiver: thread.other, body, car_id: carId, created_at: new Date().toISOString(), pending: true };
+    thread.msgs.push(temp); drawThread(true); ta.value = ""; ta.style.height = "";
+    try {
+      const { data, error } = await sb.from("messages").insert({ receiver: thread.other, body, car_id: carId }).select().single();
+      if (error) throw error;
+      const i = thread.msgs.indexOf(temp); if (i >= 0) thread.msgs[i] = data; drawThread(false);
+    } catch (x) {
+      thread.msgs = thread.msgs.filter((m) => m !== temp); drawThread(false); ta.value = body;
+      toast("Message not sent. Check your internet and try again.");
+    }
   }
 
   let draft = null;
@@ -662,19 +862,21 @@
   function nav(h) { if (location.hash === h) return route(); if (isOverlayHash(h)) pushed++; location.hash = h; }
   function route() {
     const h = location.hash || "#home";
-    const m = h.match(/^#(car|seller)-(.+)$/);
+    const m = h.match(/^#(car|seller|chat)-(.+)$/);
     if (m || h === "#filters") {
       overlayDepth = 1;
       if (m && m[1] === "car") carPage(decodeURIComponent(m[2]));
+      else if (m && m[1] === "chat") chatPage(decodeURIComponent(m[2]));
       else if (m) sellerPage(decodeURIComponent(m[2]));
       else filtersPage();
       return;
     }
+    closeThread();
     const wasOverlay = overlayDepth > 0;
     pushed = 0; overlayDepth = 0; draft = null; hideOverlay();
     const t = h.slice(1);
-    const next = ["home", "search", "sell", "saved", "account"].includes(t) ? t : "home";
-    if (wasOverlay && next === tab && tab !== "account" && tab !== "search") { if (tab === "home") playAd(currentAd()); return; } // keep scroll position after closing a page
+    const next = ["home", "search", "sell", "saved", "chats", "account"].includes(t) ? t : "home";
+    if (wasOverlay && next === tab && tab !== "account" && tab !== "search" && tab !== "chats") { if (tab === "home") playAd(currentAd()); return; } // keep scroll position after closing a page
     if (wasOverlay && next === "search" && tab === "search") { refreshSearchHeader(); runSearch(true); return; }
     tab = next; setTabUI(); window.scrollTo(0, 0);
     document.querySelectorAll("#adtrack video").forEach((v) => v.pause());
@@ -683,6 +885,7 @@
     else if (tab === "search") searchScreen();
     else if (tab === "sell") sellScreen();
     else if (tab === "saved") savedScreen(id);
+    else if (tab === "chats") chatsScreen(id);
     else accountScreen(id);
   }
   function refreshSearchHeader() {
@@ -735,9 +938,18 @@
     if (t.closest("[data-fclear]") && draft) { draft = { ...F0(), q: F.q, sort: F.sort }; return filtersPage(); }
     if (t.closest("[data-fapply]") && draft) { F = { ...draft }; draft = null; return closeOverlay(); }
 
+    // chat & follow
+    const fl = t.closest("[data-follow]"); if (fl) return toggleFollow(fl);
+    const ms = t.closest("[data-message]");
+    if (ms) { if (!me) { toast("Sign in to chat"); return nav("#account"); } chatCar = ms.dataset.car || null; return nav("#chat-" + ms.dataset.message); }
+    if (t.closest("#topSaved")) return nav("#saved");
+
     // account
-    const am = t.closest("[data-auth]"); if (am) { authMode = am.dataset.auth; return tab === "sell" ? sellScreen() : route(); }
-    if (t.closest("[data-signout]")) { await sb.auth.signOut(); toast("Signed out"); return; }
+    const gg = t.closest("[data-google]"); if (gg) return googleSignIn(gg);
+    const ey = t.closest("[data-eye]");
+    if (ey) { const inp = document.getElementById(ey.dataset.eye); const show = inp.type === "password"; inp.type = show ? "text" : "password"; ey.innerHTML = show ? I.eyeoff : I.eye; ey.setAttribute("aria-label", show ? "Hide password" : "Show password"); return; }
+    const am = t.closest("[data-auth]"); if (am) { authMode = am.dataset.auth; renderId++; return tab === "sell" ? sellScreen() : tab === "chats" ? chatsScreen(renderId) : accountScreen(renderId); }
+    if (t.closest("[data-signout]")) { stopInbox(); await sb.auth.signOut(); me = null; profile = null; unread = 0; setBadge(); toast("Signed out"); renderId++; return accountScreen(renderId); }
     if (t.closest("[data-editprof]")) return editProfile();
 
     // wizard
@@ -778,6 +990,7 @@
 
   document.addEventListener("input", (e) => {
     const el = e.target;
+    if (el.id === "chatText") { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 160) + "px"; return; }
     if (el.id === "sq") { F.q = el.value; clearTimeout(qTimer); qTimer = setTimeout(() => runSearch(true), 350); return; }
     const f = el.dataset && el.dataset.f; if (!f || !wiz) return;
     if (f === "price" || f === "mileage") {
@@ -796,6 +1009,7 @@
     if (el.id === "sort") { F.sort = el.value; runSearch(true); }
     if (el.id === "w-year" && wiz) wiz.d.year = el.value;
     if (el.id === "photos" && wiz) addPhotos([...el.files]);
+    if (el.id === "p-photo" && el.files[0]) pickAvatar(el.files[0]);
   });
 
   document.addEventListener("submit", (e) => {
@@ -803,6 +1017,7 @@
     const id = e.target.id;
     if (id === "authForm") return doAuth(e);
     if (id === "profForm") return saveProfile(e);
+    if (id === "chatForm") return sendChat(e);
     if (id === "wiz" && wiz && !wiz.busy) {
       const err = checkStep();
       if (err) { wiz.err = err; $("#werr").textContent = err; return; }
@@ -832,17 +1047,17 @@
       const res = await withTimeout(sb.auth.getSession(), 6000);
       const u = res && res.data && res.data.session ? res.data.session.user : null;
       if (u && u.is_anonymous) { sb.auth.signOut({ scope: "local" }).catch(() => {}); }
-      else if (u) { me = u; await withTimeout(loadProfile(), 8000); refreshAuthScreens(); }
+      else if (u) { me = u; await withTimeout(loadProfile(), 8000); refreshAuthScreens(); startInbox(); }
     } catch (e) { me = null; }
     sb.auth.onAuthStateChange((_ev, session) => {
       const u = session ? session.user : null;
       if ((u && u.id) === (me && me.id)) return;
       // Never call Supabase inside this callback directly: it can lock up sign-in.
-      setTimeout(async () => { me = u && !u.is_anonymous ? u : null; await loadProfile(); refreshAuthScreens(); }, 0);
+      setTimeout(async () => { me = u && !u.is_anonymous ? u : null; await loadProfile(); refreshAuthScreens(); if (me) startInbox(); else stopInbox(); }, 0);
     });
   }
   function refreshAuthScreens() {
-    if (!overlayDepth && (tab === "account" || tab === "sell")) { renderId++; tab === "sell" ? sellScreen() : accountScreen(renderId); }
+    if (!overlayDepth && (tab === "account" || tab === "sell" || tab === "chats")) { renderId++; tab === "sell" ? sellScreen() : tab === "chats" ? chatsScreen(renderId) : accountScreen(renderId); }
   }
   // If anything breaks, show a message instead of an empty screen.
   window.addEventListener("error", (e) => {

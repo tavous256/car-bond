@@ -294,6 +294,60 @@ label.fl small{font-weight:500;color:var(--muted)}
 .pill{display:inline-block;font-size:.8rem;font-weight:900;padding:.15rem .55rem;border-radius:999px;background:var(--ok-soft);color:var(--ok);margin-top:.2rem}
 .pill.sold{background:var(--red-soft);color:var(--red)}
 .pill.feat{background:#d7141e;color:#fff}
+
+/* account extras */
+.pw{position:relative;display:block}
+.pw .inp{padding-right:3.4rem}
+.eye{position:absolute;right:.35rem;top:50%;transform:translateY(-50%);width:2.8rem;height:2.8rem;border:0;background:none;color:var(--muted);display:grid;place-items:center;cursor:pointer;border-radius:.7rem}
+.eye svg{width:1.4rem;height:1.4rem}
+.btn.google{background:#fff;color:#1f1f1f;border:2px solid var(--line)}
+.btn.google svg{width:1.4rem;height:1.4rem}
+.or{display:flex;align-items:center;gap:.7rem;color:var(--muted);font-size:.9rem;font-weight:700}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+img.avatar{object-fit:cover;background:var(--line)}
+.avedit{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.stats div{background:var(--bg);border-radius:1rem;padding:.6rem .8rem;display:grid}
+.stats b{font-family:var(--display);font-size:1.4rem;font-weight:900}
+.stats span{color:var(--muted);font-size:.85rem;font-weight:700}
+.people{gap:.8rem}
+.person{flex:none;border:0;background:none;display:grid;justify-items:center;gap:.3rem;width:5rem;cursor:pointer;font-weight:700;font-size:.85rem}
+.person span{max-width:5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* chat */
+.tabic{position:relative;display:grid}
+.tabic b{position:absolute;top:-.3rem;right:-.6rem;min-width:1.2rem;height:1.2rem;padding:0 .3rem;border-radius:99px;background:var(--red);color:#fff;font-size:.7rem;font-weight:900;display:grid;place-items:center}
+.convos{display:grid;gap:.5rem}
+.convo{border:0;background:var(--surface);border-radius:1.1rem;padding:.75rem .85rem;display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:center;text-align:left;cursor:pointer;box-shadow:var(--shadow);width:100%}
+.cv{min-width:0;display:grid;gap:.15rem}
+.cvt{display:flex;justify-content:space-between;gap:.5rem;align-items:baseline}
+.cvt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvt small{color:var(--muted);flex:none;font-size:.8rem}
+.cvm{display:flex;gap:.5rem;align-items:center;color:var(--muted);font-size:.95rem}
+.cvm span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvm i{font-style:normal;background:var(--red);color:#fff;border-radius:99px;min-width:1.4rem;height:1.4rem;display:grid;place-items:center;font-size:.78rem;font-weight:900;padding:0 .35rem}
+.chathead{flex:1;min-width:0;border:0;background:none;color:#fff;display:flex;align-items:center;gap:.6rem;text-align:left;cursor:pointer}
+.chathead .avatar{width:2.5rem;height:2.5rem;font-size:1.1rem}
+.chathead span{display:grid;min-width:0}
+.chathead b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chathead small{font-size:.78rem;opacity:.8}
+.msgs{display:grid;gap:.45rem;padding-bottom:1rem}
+.msgs .hint{color:var(--muted);text-align:center;margin:2rem 0}
+.day{justify-self:center;font-size:.78rem;font-weight:800;color:var(--muted);background:var(--surface);padding:.2rem .7rem;border-radius:99px;margin:.4rem 0}
+.bub{max-width:82%;padding:.6rem .8rem .4rem;border-radius:1.1rem;display:grid;gap:.15rem}
+.bub p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub small{font-size:.72rem;opacity:.7;justify-self:end}
+.bub.me{justify-self:end;background:var(--red);color:#fff;border-bottom-right-radius:.35rem}
+.bub.them{justify-self:start;background:var(--surface);border-bottom-left-radius:.35rem;box-shadow:var(--shadow)}
+.carref{display:flex;align-items:center;gap:.4rem;border:0;border-radius:.7rem;padding:.35rem .6rem;background:rgba(0,0,0,.18);color:inherit;font-weight:800;font-size:.85rem;cursor:pointer;text-align:left}
+.carref svg{width:1.6rem;height:.9rem;flex:none}
+.composer{display:flex!important;align-items:flex-end;gap:.5rem}
+.composer textarea{flex:1;min-width:0;border:2px solid var(--line);background:var(--bg);border-radius:1.2rem;padding:.7rem .9rem;resize:none;font-size:1rem;max-height:10rem}
+.composer textarea:focus{outline:none;border-color:var(--red)}
+.sendbtn{width:3rem;height:3rem;border-radius:50%;border:0;background:var(--red);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.sendbtn svg{width:1.35rem;height:1.35rem}
+.actionbar .in.three{grid-template-columns:repeat(3,1fr)}
+.actionbar .in.three .btn{padding:.8rem .4rem;font-size:.95rem}
 @media (prefers-reduced-motion:reduce){.screen,.overlay{animation:none}.skel i{animation:none}.bar i{transition:none}}
 </style>
 </head>
@@ -305,6 +359,7 @@ label.fl small{font-weight:500;color:var(--muted)}
     <img src="icon-192.png" alt="">
     <div class="t">Car <span>Bond</span></div>
     <button class="install" id="installBtn" hidden>Install</button>
+    <button class="iconbtn" id="topSaved" aria-label="Saved cars"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button>
     <button class="iconbtn" id="topAccount" aria-label="My account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
   </div></header>
   <main id="main"><p style="text-align:center;color:var(--muted);padding:3rem 0">Loading Car Bond…</p></main>
@@ -314,14 +369,14 @@ label.fl small{font-weight:500;color:var(--muted)}
   <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Home</button>
   <button data-tab="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search</button>
   <button data-tab="sell"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><path d="M12 5v14M5 12h14"/></svg></span>Sell</button>
-  <button data-tab="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Saved</button>
+  <button data-tab="chats"><span class="tabic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><b id="chatBadge" hidden>0</b></span>Chats</button>
   <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Account</button>
 </div></nav>
 
 <div id="overlay"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="config.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
