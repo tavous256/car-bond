@@ -1,5 +1,5 @@
 // Car Bond service worker: keeps the app shell available so it opens fast and installs as an app.
-const CACHE = "car-bond-v6";
+const CACHE = "car-bond-v7";
 const SHELL = [
   "./", "./index.html", "./app.js", "./config.js", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./maskable-512.png", "./apple-touch-icon.png", "./logo.jpg", "./hero-poster.jpg",
@@ -27,7 +27,7 @@ self.addEventListener("fetch", (e) => {
   // Own files: try the network first so updates arrive, fall back to cache when offline.
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: "no-cache" }).then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy));
         return res;
