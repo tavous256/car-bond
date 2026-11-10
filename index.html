@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Car Bond</title>
+<meta name="description" content="Buy and sell cars in Uganda, person to person.">
+<meta name="theme-color" content="#1d3b8f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Car Bond">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f4f6fb; --surface:#ffffff; --ink:#14203a; --muted:#5d6782; --line:#dde2ee;
+  --brand:#1d3b8f; --brand-ink:#ffffff; --sun:#f5b301; --sun-ink:#2a1d00; --sun-soft:#fff3cf;
+  --ok:#1f8a4c; --ok-soft:#e2f4ea; --warn:#b4361f; --warn-soft:#fbe6e1;
+  --shadow:0 1px 2px rgba(20,32,58,.06),0 6px 20px rgba(20,32,58,.07);
+  --display:"Bricolage Grotesque",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:16px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0d1324; --surface:#161e35; --ink:#eef1fa; --muted:#9aa4c2; --line:#26304d;
+  --brand:#1d3b8f; --brand-ink:#ffffff; --sun:#ffc533; --sun-ink:#231800; --sun-soft:#3a2f0e;
+  --ok:#5cd18f; --ok-soft:#14321f; --warn:#ff8f78; --warn-soft:#3a1a14;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3); color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);
+  padding-bottom:calc(84px + env(safe-area-inset-bottom,0px));-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+header{background:var(--brand);color:var(--brand-ink);position:sticky;top:0;z-index:5;padding-top:env(safe-area-inset-top,0px)}
+header .wrap{padding-block:14px;display:grid;gap:12px}
+.brandrow{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:11px;flex:none}
+.brandrow h1{font-size:22px;font-weight:800}
+.brandrow p{margin:0;font-size:12.5px;opacity:.85}
+.brandrow .grow{flex:1;min-width:0}
+.install{border:0;background:var(--sun);color:var(--sun-ink);font-weight:700;border-radius:999px;padding:8px 14px;cursor:pointer;flex:none}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);color:var(--ink);border-radius:999px;padding:0 14px;height:44px}
+.search input{border:0;background:transparent;flex:1;min-width:0;outline:none;height:100%}
+.search svg{flex:none;opacity:.6}
+
+.filters{display:flex;gap:8px;overflow-x:auto;padding-block:14px 4px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:13.5px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:10px;color:var(--muted);font-size:13.5px}
+.toolbar select{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 8px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding-block:6px 20px}
+.card{background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;position:relative}
+.ph{aspect-ratio:4/3;background:linear-gradient(160deg,var(--line),var(--bg));display:grid;place-items:center;overflow:hidden;max-width:100%}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph svg{width:46%;color:var(--muted);opacity:.55}
+.cbody{padding:12px 14px 14px;display:grid;gap:4px;min-width:0}
+.price{font-family:var(--display);font-weight:800;font-size:20px}
+.price small{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);margin-right:3px}
+.title{font-weight:700;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.badge{position:absolute;top:10px;left:10px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+.badge.sold{background:var(--warn-soft);color:var(--warn)}
+.badge.ex{background:var(--sun);color:var(--sun-ink)}
+.card.is-sold{opacity:.62}
+.fav{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;color:#14203a}
+.fav[aria-pressed="true"]{color:#d6336c}
+.fav svg{width:20px;height:20px}
+.fav[aria-pressed="true"] svg{fill:currentColor}
+
+.empty{background:var(--surface);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);display:grid;gap:14px;margin-block:10px 24px}
+.empty h2{font-size:20px}
+.empty p{margin:0;color:var(--muted);max-width:60ch}
+.note{font-size:13px;color:var(--ink);padding:10px 12px;border-radius:12px;background:var(--sun-soft)}
+
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn.primary{background:var(--sun);color:var(--sun-ink)}
+.btn.brand{background:var(--brand);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.danger{background:var(--warn-soft);color:var(--warn)}
+.btn.wa{background:#1fa855;color:#fff}
+.btn:disabled{opacity:.55;cursor:default}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{border:0;background:none;padding:9px 4px 10px;display:grid;justify-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--brand)}
+@media (prefers-color-scheme:dark){nav.tabs button[aria-current="page"]{color:var(--sun)}}
+nav.tabs .plus{width:44px;height:30px;border-radius:999px;background:var(--sun);color:var(--sun-ink);display:grid;place-items:center}
+
+.sec-head{padding-block:22px 6px;display:grid;gap:4px}
+.sec-head h2{font-size:26px;font-weight:800}
+.sec-head p{margin:0;color:var(--muted)}
+
+form.sell{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;display:grid;gap:14px;margin-block:12px 28px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+label.f{display:grid;gap:5px;font-weight:600;font-size:13.5px;min-width:0}
+label.f .hint{font-weight:400;color:var(--muted);font-size:12.5px}
+.f input,.f select,.f textarea{border:1.5px solid var(--line);background:var(--bg);border-radius:11px;padding:11px 12px;width:100%;min-width:0;font-size:16px}
+.f textarea{min-height:96px;resize:vertical}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs img{width:76px;height:58px;object-fit:cover;border-radius:9px}
+.legend{font-family:var(--display);font-weight:700;font-size:16px;padding-top:6px;border-top:1px solid var(--line)}
+.legend:first-child{border-top:0;padding-top:0}
+.status{font-size:13.5px;min-height:1.4em}
+.status.err{color:var(--warn)}
+
+.mine{display:grid;gap:12px;margin-block:12px 28px}
+.mrow{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px;align-items:center}
+.mrow .ph{border-radius:10px}
+.mrow .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.mrow .acts .btn{padding:8px 12px;font-size:13.5px;flex:1}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
+.pill.sold{background:var(--warn-soft);color:var(--warn)}
+
+.scrim{position:fixed;inset:0;background:rgba(8,12,24,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:22px 22px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));animation:up .28s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:var(--bg)}
+.gallery>*{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:4/3;max-width:100%}
+.gallery img{width:100%;height:100%;object-fit:cover}
+.sbody{padding:18px 18px 0;display:grid;gap:16px}
+.closer{position:sticky;top:0;display:flex;justify-content:flex-end;padding:10px;margin-bottom:-58px;z-index:2;pointer-events:none}
+.closer button{pointer-events:auto;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.95);color:#14203a;font-size:22px;cursor:pointer;box-shadow:var(--shadow)}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-radius:14px;overflow:hidden;margin:0}
+@media (max-width:420px){.specs{grid-template-columns:repeat(2,1fr)}}
+.specs div{background:var(--surface);padding:10px 12px;display:grid}
+.specs dt{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.specs dd{margin:0;font-weight:700}
+.seller{background:var(--bg);border-radius:14px;padding:14px;display:grid;gap:10px}
+.phone{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.phone code{font:700 17px/1 var(--body);font-variant-numeric:tabular-nums;user-select:all;background:var(--surface);padding:9px 12px;border-radius:10px;border:1.5px solid var(--line)}
+.desc{white-space:pre-wrap;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brandrow">
+      <img class="logo" src="icon-192.png" alt="">
+      <div class="grow"><h1>Car Bond</h1><p>Buy and sell cars in Uganda, person to person</p></div>
+      <button class="install" id="installBtn" hidden>Install app</button>
+    </div>
+    <label class="search" id="searchWrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search Harrier, Premio, Ntinda…" aria-label="Search cars">
+    </label>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <button data-tab="browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16v-3l2-5h10l4 5h2v3"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></svg>Browse</button>
+  <button data-tab="sell"><span class="plus"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg></span>Sell</button>
+  <button data-tab="mine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>My cars</button>
+  <button data-tab="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Saved</button>
+</div></nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
