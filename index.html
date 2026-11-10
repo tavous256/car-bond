@@ -96,14 +96,47 @@ nav.tabs .plus svg{width:1.5rem;height:1.5rem}
 .hscroll{display:flex;gap:.6rem;overflow-x:auto;scrollbar-width:none;margin:0 -1rem;padding:0 1rem}
 .hscroll::-webkit-scrollbar{display:none}
 .make{flex:none;border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:.55rem 1.05rem;font-weight:800;cursor:pointer;min-height:2.9rem}
-.herovid{position:relative;margin:1rem 0 0;border-radius:1.25rem;overflow:hidden;background:#000;aspect-ratio:4/5;max-height:72vh;width:100%;box-shadow:var(--shadow)}
-.herovid video{width:100%;height:100%;object-fit:cover;display:block}
-.herovid.novid video{object-fit:contain;background:#fff}
-.hv-txt{position:absolute;inset:auto 0 0 0;padding:2.2rem 1rem .8rem;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#fff;display:grid;gap:.1rem}
-.hv-txt span{font-family:var(--display);font-stretch:118%;font-weight:900;font-size:1.6rem;line-height:1}
-.hv-txt b{color:#ff3a42}
-.hv-txt small{font-size:.95rem;opacity:.9}
-.herovid.novid .hv-txt,.herovid.novid .snd{display:none}
+.ads{margin-top:1rem;background:var(--surface);border-radius:1.25rem;box-shadow:var(--shadow);overflow:hidden}
+.adhead{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem}
+.adhead span{font-size:.72rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.adhere{display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:800;color:var(--muted);text-decoration:none;padding:.3rem .5rem;border-radius:999px;border:1px solid var(--line)}
+.adhere svg{width:.8rem;height:.8rem;color:#1fa855}
+.adtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.adtrack::-webkit-scrollbar{display:none}
+.ad{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+.advid{position:relative;background:#000;aspect-ratio:4/5;max-height:70vh;width:100%;overflow:hidden}
+.advid video{width:100%;height:100%;object-fit:cover;display:block}
+.advid.novid video{object-fit:contain}
+.adn{position:absolute;left:.7rem;top:.7rem;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:.2rem .6rem;font-size:.78rem;font-weight:800}
+.adinfo{padding:.9rem 1rem 1rem;display:grid;gap:.25rem}
+.adname{font-family:var(--display);font-stretch:115%;font-weight:900;font-size:1.5rem;line-height:1.1}
+.adco{color:var(--muted);font-size:.95rem}
+.adloc{display:flex;align-items:center;gap:.35rem;font-weight:800}
+.adloc svg{width:1.1rem;height:1.1rem;color:var(--red);flex:none}
+.adphones{color:var(--muted);font-weight:700;font-size:.95rem}
+.adbtns{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+.addots{display:flex;justify-content:center;gap:.45rem;padding:0 0 .9rem}
+.addots button{width:.6rem;height:.6rem;border-radius:99px;border:0;background:var(--line);padding:0;cursor:pointer;transition:width .2s}
+.addots button[aria-current="true"]{width:1.6rem;background:var(--red)}
+
+/* opening animation */
+.intro{position:fixed;inset:0;z-index:100;background:#0e0e10;display:grid;place-items:center;align-content:center;gap:1.1rem;color:#fff;animation:introOut .5s ease-in 2.3s forwards}
+.intro .lg{width:9rem;height:9rem;border-radius:2rem;background:#fff;overflow:hidden;position:relative;box-shadow:0 0 0 0 rgba(255,58,66,.6);animation:pop .7s cubic-bezier(.2,1.6,.4,1) both,glow 1.4s ease-out .7s both}
+.intro .lg img{width:100%;height:100%;object-fit:cover}
+.intro .lg::after{content:"";position:absolute;inset:-20%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.85) 50%,transparent 60%);transform:translateX(-120%);animation:shine 1s ease-in-out .75s forwards}
+.intro .wd{font-family:var(--display);font-stretch:120%;font-weight:900;font-size:2.4rem;line-height:1;animation:up .6s ease-out .55s both}
+.intro .wd b{color:#ff3a42}
+.intro .tg{font-size:1rem;opacity:.8;animation:up .6s ease-out .75s both}
+.intro .road{width:12rem;height:.3rem;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.intro .road i{display:block;height:100%;width:100%;background:#ff3a42;transform-origin:left;animation:drive 1.3s cubic-bezier(.6,0,.3,1) .9s both}
+@keyframes pop{from{transform:scale(.4) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(255,58,66,.45)}100%{box-shadow:0 0 0 1.6rem rgba(255,58,66,0)}}
+@keyframes shine{to{transform:translateX(120%)}}
+@keyframes up{from{transform:translateY(1rem);opacity:0}to{transform:none;opacity:1}}
+@keyframes drive{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes introOut{to{opacity:0;visibility:hidden;transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.intro{animation-delay:.8s}.intro *{animation-duration:.01s!important;animation-delay:0s!important}}
+.snd{display:none}
 .snd{position:absolute;top:.7rem;right:.7rem;width:2.9rem;height:2.9rem;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;cursor:pointer}
 .snd svg{width:1.4rem;height:1.4rem}
 .welcome{border-radius:1.25rem;overflow:hidden;box-shadow:var(--shadow);display:grid;margin-top:1rem}
@@ -265,6 +298,8 @@ label.fl small{font-weight:500;color:var(--muted)}
 </style>
 </head>
 <body>
+<div class="intro" id="intro" aria-hidden="true"><div class="lg"><img src="icon-512.png" alt=""></div><div class="wd">Car <b>Bond</b></div><div class="tg">Buy and sell cars in Uganda</div><div class="road"><i></i></div></div>
+<script>(function(){var el=document.getElementById("intro");try{if(sessionStorage.getItem("cb-intro")){el.remove();return}sessionStorage.setItem("cb-intro","1")}catch(e){}setTimeout(function(){if(el.parentNode)el.remove()},3000)})();</script>
 <div class="app">
   <header class="top"><div class="in">
     <img src="icon-192.png" alt="">
@@ -272,7 +307,7 @@ label.fl small{font-weight:500;color:var(--muted)}
     <button class="install" id="installBtn" hidden>Install</button>
     <button class="iconbtn" id="topAccount" aria-label="My account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
   </div></header>
-  <main id="main"></main>
+  <main id="main"><p style="text-align:center;color:var(--muted);padding:3rem 0">Loading Car Bond…</p></main>
 </div>
 
 <nav class="tabs" aria-label="Main"><div class="in">
@@ -286,7 +321,7 @@ label.fl small{font-weight:500;color:var(--muted)}
 <div id="overlay"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=8"></script>
-<script src="app.js?v=8"></script>
+<script src="config.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

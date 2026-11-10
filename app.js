@@ -24,6 +24,7 @@
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
     mute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="m17 9 4 6M21 9l-4 6"/></svg>',
     sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
     photos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>',
   };
 
@@ -144,27 +145,71 @@
   const offline = (retry) => emptyBox("Can’t connect", "Check your internet, then try again.", `<button class="btn black" data-retry="${retry}">Try again</button>`);
 
   // ---------- screens ----------
-  // Home banner video (hero.mp4). Falls back to the logo picture if the video is missing or can't play.
-  function playHero() {
-    const v = $("#heroVid"); if (!v) return;
-    v.addEventListener("error", () => v.closest(".herovid").classList.add("novid"), { once: true });
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const p = v.play(); if (p && p.catch) p.catch(() => {});
+  // ---------- sponsored video ads on Home ----------
+  const ADS_WHATSAPP = "16723674177"; // Car Bond owner: for anyone who wants their ad here
+  const ADS = [
+    { video: "wova-rich-1.mp4", poster: "wova-rich-1.jpg", name: "Wova Rich", company: "WOVA/R Investments Ltd", tagline: "We sell both new and used cars", location: "Old Kampala, after Police", phones: ["0759179668", "0788010132"] },
+    { video: "wova-rich-2.mp4", poster: "wova-rich-2.jpg", name: "Wova Rich", company: "WOVA/R Investments Ltd", tagline: "We sell both new and used cars", location: "Old Kampala, after Police", phones: ["0759179668", "0788010132"] },
+  ];
+  let adSound = false;
+  function adsBlock() {
+    const hereMsg = encodeURIComponent("Hello, I want to put my ad on the Car Bond app.");
+    return `<section class="ads" aria-label="Sponsored">
+      <div class="adhead"><span>Sponsored</span><a class="adhere" href="https://wa.me/${ADS_WHATSAPP}?text=${hereMsg}" target="_blank" rel="noopener">${I.wa}Advertise here</a></div>
+      <div class="adtrack" id="adtrack">${ADS.map((ad, i) => {
+        const n = waNumber(ad.phones[0]);
+        const msg = encodeURIComponent(`Hello ${ad.name}, I saw your ad on Car Bond.`);
+        return `<article class="ad" data-ad="${i}">
+          <div class="advid"><video src="${esc(ad.video)}" poster="${esc(ad.poster)}" muted playsinline preload="${i ? "metadata" : "auto"}" ${i ? "" : "autoplay"} aria-label="${esc(ad.name)} video"></video>
+            <button class="snd" data-sound aria-label="Turn sound on">${I.mute}</button>
+            ${ADS.length > 1 ? `<span class="adn">${i + 1} / ${ADS.length}</span>` : ""}</div>
+          <div class="adinfo">
+            <div class="adname">${esc(ad.name)}</div>
+            <div class="adco">${esc(ad.company)} · ${esc(ad.tagline)}</div>
+            <div class="adloc">${I.pin}${esc(ad.location)}</div>
+            <div class="adphones num">${ad.phones.map(esc).join(" · ")}</div>
+            <div class="adbtns"><a class="btn wa sm" href="https://wa.me/${n}?text=${msg}" target="_blank" rel="noopener">${I.wa}WhatsApp</a><a class="btn red sm" href="tel:+${n}">${I.phone}Call</a></div>
+          </div></article>`;
+      }).join("")}</div>
+      ${ADS.length > 1 ? `<div class="addots">${ADS.map((_, i) => `<button data-adgo="${i}" aria-label="Ad ${i + 1}" aria-current="${i === 0}"></button>`).join("")}</div>` : ""}
+    </section>`;
   }
-  // Redraw Home but keep the same video element, so it doesn't restart when the cars finish loading.
+  function currentAd() { const t = $("#adtrack"); return t ? Math.round(t.scrollLeft / Math.max(1, t.clientWidth)) : 0; }
+  function playAd(i) {
+    const vids = document.querySelectorAll("#adtrack video");
+    vids.forEach((v, k) => {
+      if (k === i) { v.muted = !adSound; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+      else { v.pause(); }
+    });
+    document.querySelectorAll(".addots button").forEach((b, k) => b.setAttribute("aria-current", k === i));
+    document.querySelectorAll("[data-sound]").forEach((b) => { b.innerHTML = adSound ? I.sound : I.mute; b.setAttribute("aria-label", adSound ? "Turn sound off" : "Turn sound on"); });
+  }
+  function goAd(i) { const t = $("#adtrack"); if (!t) return; t.scrollTo({ left: i * t.clientWidth, behavior: "smooth" }); }
+  function wireAds() {
+    const t = $("#adtrack"); if (!t || t.dataset.wired) return;
+    t.dataset.wired = "1";
+    t.querySelectorAll("video").forEach((v, k) => {
+      v.addEventListener("ended", () => { if (ADS.length > 1) goAd((k + 1) % ADS.length); else { v.currentTime = 0; v.play().catch(() => {}); } });
+      v.addEventListener("error", () => v.closest(".advid").classList.add("novid"), { once: true });
+    });
+    let st = null;
+    t.addEventListener("scroll", () => { clearTimeout(st); st = setTimeout(() => playAd(currentAd()), 120); }, { passive: true });
+    if ("IntersectionObserver" in window) new IntersectionObserver((en) => en.forEach((x) => (x.isIntersecting ? playAd(currentAd()) : t.querySelectorAll("video").forEach((v) => v.pause()))), { threshold: 0.3 }).observe(t);
+    playAd(0);
+  }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) document.querySelectorAll("#adtrack video").forEach((v) => v.pause()); else if (tab === "home" && !overlayDepth) playAd(currentAd()); });
+  // Redraw Home but keep the same ad videos, so they don't restart when the cars finish loading.
   function redrawHome(html) {
-    const keep = $("#main .herovid");
+    const keep = $("#main .ads");
     $("#main").innerHTML = html;
-    const fresh = $("#main .herovid");
+    const fresh = $("#main .ads");
     if (keep && fresh) fresh.replaceWith(keep);
-    playHero();
+    wireAds();
   }
   async function homeScreen(id) {
     const firstTime = !store("cb-welcomed");
     const shell = (featured, latest) => `<div class="screen">
-      <div class="herovid"><video id="heroVid" src="hero.mp4" poster="hero-poster.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
-        <button class="snd" data-sound aria-label="Turn sound on">${I.mute}</button>
-        <div class="hv-txt"><span>Car <b>Bond</b></span><small>Buy and sell cars in Uganda</small></div></div>
+      ${adsBlock()}
       <div class="hero"><h1>Find your next car</h1>
         <button class="searchbox" data-go="#search">${I.search}<span>Search Harrier, Premio, Ntinda…</span></button></div>
       <div class="hscroll" style="margin-top:.8rem">${Object.keys(MAKES).map((m) => `<button class="make" data-make-go="${esc(m)}">${esc(m)}</button>`).join("")}</div>
@@ -179,7 +224,7 @@
       ${latest}
       <div class="sellcta"><h3>Selling a car?</h3><p>Post it free in 2 minutes. Buyers call you directly.</p><button class="btn red" data-go="#sell">Sell my car</button></div>
     </div>`;
-    $("#main").innerHTML = shell("", `<div class="list">${skeletons(2)}</div>`); playHero();
+    $("#main").innerHTML = shell("", `<div class="list">${skeletons(2)}</div>`); wireAds();
     try {
       const [feat, latest] = await Promise.all([
         q((s) => s.from("cars").select(SELECT).eq("featured", true).eq("status", "available").order("created_at", { ascending: false }).limit(10)),
@@ -511,6 +556,7 @@
   // ---------- overlays: car page, seller page, filters ----------
   let overlayDepth = 0;
   function openOverlay(html, actionbar) {
+    document.querySelectorAll("#adtrack video").forEach((v) => v.pause());
     const o = $("#overlay");
     o.innerHTML = `<div class="overlay"><div class="wrap">${html}</div>${actionbar ? `<div class="actionbar">${actionbar}</div>` : ""}</div>`;
     document.body.style.overflow = "hidden";
@@ -628,9 +674,10 @@
     pushed = 0; overlayDepth = 0; draft = null; hideOverlay();
     const t = h.slice(1);
     const next = ["home", "search", "sell", "saved", "account"].includes(t) ? t : "home";
-    if (wasOverlay && next === tab && tab !== "account" && tab !== "search") return; // keep scroll position after closing a page
+    if (wasOverlay && next === tab && tab !== "account" && tab !== "search") { if (tab === "home") playAd(currentAd()); return; } // keep scroll position after closing a page
     if (wasOverlay && next === "search" && tab === "search") { refreshSearchHeader(); runSearch(true); return; }
     tab = next; setTabUI(); window.scrollTo(0, 0);
+    document.querySelectorAll("#adtrack video").forEach((v) => v.pause());
     const id = ++renderId;
     if (tab === "home") homeScreen(id);
     else if (tab === "search") searchScreen();
@@ -661,8 +708,8 @@
     const op = t.closest("[data-open]"); if (op && !t.closest(".fav")) return nav("#car-" + op.dataset.open);
     const mg = t.closest("[data-make-go]"); if (mg) { F = { ...F0(), make: mg.dataset.makeGo }; return nav("#search"); }
     const bg = t.closest("[data-body-go]"); if (bg) { F = { ...F0(), body: bg.dataset.bodyGo }; return nav("#search"); }
-    const snd = t.closest("[data-sound]");
-    if (snd) { const v = $("#heroVid"); if (v) { v.muted = !v.muted; if (!v.muted) v.play().catch(() => {}); snd.innerHTML = v.muted ? I.mute : I.sound; snd.setAttribute("aria-label", v.muted ? "Turn sound on" : "Turn sound off"); } return; }
+    if (t.closest("[data-sound]")) { adSound = !adSound; playAd(currentAd()); return; }
+    const adg = t.closest("[data-adgo]"); if (adg) { goAd(Number(adg.dataset.adgo)); return; }
     if (t.closest("[data-dismiss]")) { store("cb-welcomed", 1); const w = $(".welcome"); if (w) w.remove(); return; }
     const rt = t.closest("[data-retry]"); if (rt) { if (/^(car|seller)$/.test(rt.dataset.retry)) return route(); renderId++; return route(); }
     if (t.closest("[data-more]")) return runSearch(false);
@@ -778,19 +825,29 @@
   // ---------- start ----------
   async function start() {
     if (!sb) { $("#main").innerHTML = emptyBox("Almost ready", "Add your Supabase details to config.js.", ""); return; }
+    // Show the app straight away; sign-in state loads in the background.
+    route();
+    const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r(null), ms))]);
     try {
-      const { data } = await sb.auth.getSession();
-      me = data && data.session ? data.session.user : null;
-      if (me && me.is_anonymous) { await sb.auth.signOut(); me = null; }
-      await loadProfile();
+      const res = await withTimeout(sb.auth.getSession(), 6000);
+      const u = res && res.data && res.data.session ? res.data.session.user : null;
+      if (u && u.is_anonymous) { sb.auth.signOut({ scope: "local" }).catch(() => {}); }
+      else if (u) { me = u; await withTimeout(loadProfile(), 8000); refreshAuthScreens(); }
     } catch (e) { me = null; }
-    sb.auth.onAuthStateChange(async (_ev, session) => {
+    sb.auth.onAuthStateChange((_ev, session) => {
       const u = session ? session.user : null;
       if ((u && u.id) === (me && me.id)) return;
-      me = u && !u.is_anonymous ? u : null; await loadProfile();
-      if (!overlayDepth && (tab === "account" || tab === "sell")) { renderId++; tab === "sell" ? sellScreen() : accountScreen(renderId); }
+      // Never call Supabase inside this callback directly: it can lock up sign-in.
+      setTimeout(async () => { me = u && !u.is_anonymous ? u : null; await loadProfile(); refreshAuthScreens(); }, 0);
     });
-    route();
   }
+  function refreshAuthScreens() {
+    if (!overlayDepth && (tab === "account" || tab === "sell")) { renderId++; tab === "sell" ? sellScreen() : accountScreen(renderId); }
+  }
+  // If anything breaks, show a message instead of an empty screen.
+  window.addEventListener("error", (e) => {
+    const m = $("#main"); if (!m || m.textContent.trim()) return;
+    m.innerHTML = emptyBox("Something went wrong", "Close the app and open it again. Error: " + esc(e.message || "unknown"), '<button class="btn black" onclick="location.reload()">Reload</button>');
+  });
   start();
 })();
